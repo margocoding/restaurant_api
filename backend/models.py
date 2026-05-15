@@ -1,7 +1,16 @@
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Table, create_engine
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    create_engine,
+)
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
 load_dotenv()
@@ -42,32 +51,38 @@ menu_categories = Table(
 
 class CategoryModel(Base):
     __tablename__ = "categories"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
     description = Column(String, nullable=True)
-    
+
     # Relationship with menu items
-    menu_items = relationship("MenuModel", secondary=menu_categories, back_populates="categories")
+    menu_items = relationship(
+        "MenuModel", secondary=menu_categories, back_populates="categories"
+    )
 
 
 class MenuModel(Base):
     __tablename__ = "menu"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True, nullable=False)
     description = Column(String, nullable=False)
     price = Column(Float, nullable=False)
-    category = Column(String, nullable=True)  # Legacy field, kept for backward compatibility
+    category = Column(
+        String, nullable=True
+    )  # Legacy field, kept for backward compatibility
     image = Column(String, nullable=True)
-    
+
     # Relationship with categories
-    categories = relationship("CategoryModel", secondary=menu_categories, back_populates="menu_items")
+    categories = relationship(
+        "CategoryModel", secondary=menu_categories, back_populates="menu_items"
+    )
 
 
 class OrderModel(Base):
     __tablename__ = "orders"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     customer_name = Column(String, nullable=False)
     phone = Column(String, nullable=False)
@@ -79,7 +94,7 @@ class OrderModel(Base):
 
 class OrderItemModel(Base):
     __tablename__ = "order_items"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(Integer, ForeignKey("orders.id"))
     menu_item_id = Column(Integer)
@@ -88,8 +103,39 @@ class OrderItemModel(Base):
 
 class UserModel(Base):
     __tablename__ = "users"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(String, default="user")  # "admin" or "user"
+
+    # Relationships
+    cart_items = relationship(
+        "CartItemModel", back_populates="user", cascade="all, delete-orphan"
+    )
+    favorites = relationship(
+        "FavoriteModel", back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class CartItemModel(Base):
+    __tablename__ = "cart_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    menu_item_id = Column(Integer, nullable=False)
+    quantity = Column(Integer, default=1)
+
+    # Relationship
+    user = relationship("UserModel", back_populates="cart_items")
+
+
+class FavoriteModel(Base):
+    __tablename__ = "favorites"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    menu_item_id = Column(Integer, nullable=False)
+
+    # Relationship
+    user = relationship("UserModel", back_populates="favorites")

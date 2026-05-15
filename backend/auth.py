@@ -9,7 +9,9 @@ from passlib.context import CryptContext
 from backend.models import UserModel
 
 # Configuration
-SECRET_KEY = "your-secret-key-change-in-production"  # Should be env variable in production
+SECRET_KEY = (
+    "your-secret-key-change-in-production"  # Should be env variable in production
+)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -82,6 +84,6 @@ def require_admin(current_user: UserModel = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions. Admin access required."
+            detail="Not enough permissions. Admin access required.",
         )
     return current_user
